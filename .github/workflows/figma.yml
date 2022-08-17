@@ -1,0 +1,28 @@
+name: Generate Design Token
+
+on:
+  push:
+    branches: [feat/figma-tokens]
+
+jobs:
+  gen-design-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .node-version
+          cache: "npm"
+      - run: npm install
+      - run: npm run transform-token
+      - run: npm run build-token
+      - name: commit & push
+        run: |
+          git remote set-url origin https://github-actions:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          if (git diff --shortstat | grep '[0-9]'); then \
+            git add .; \
+            git commit -m "feat: デザイントークンの追加・更新"; \
+            git push origin HEAD:${GITHUB_REF}; \
+          fi
